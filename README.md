@@ -1,7 +1,5 @@
 # install-v2ray
 
-## Alpine 一键安装 V2Ray 服务端
-
 这是一个帮助你在Alpine系统上一键安装V2Ray服务端的脚本。
 
 - 安装 `v2ray-core`
