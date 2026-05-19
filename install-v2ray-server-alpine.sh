@@ -11,6 +11,7 @@ CONF_DIR="/etc/v2ray"
 CONF_FILE="$CONF_DIR/config.json"
 INIT_FILE="/etc/init.d/v2ray"
 LOG_DIR="/var/log/v2ray"
+BIN_PATH=""
 COLOR_RESET="$(printf '\033[0m')"
 COLOR_TITLE="$(printf '\033[1;36m')"
 COLOR_LABEL="$(printf '\033[1;33m')"
@@ -22,6 +23,7 @@ update-ca-certificates >/dev/null 2>&1 || true
 install_v2ray_binary() {
   if apk add --no-cache v2ray >/dev/null 2>&1; then
     if command -v v2ray >/dev/null 2>&1; then
+      BIN_PATH="$(command -v v2ray)"
       return 0
     fi
   fi
@@ -44,8 +46,10 @@ install_v2ray_binary() {
   unzip -q "$TMP/v2ray.zip" -d "$TMP/unpack"
   BIN="$(find "$TMP/unpack" -type f \( -name v2ray -o -name v2ray.exe \) | head -n 1)"
   [ -n "$BIN" ] || { echo "v2ray binary not found"; exit 1; }
+
   install -d /usr/local/bin
   install -m 755 "$BIN" /usr/local/bin/v2ray
+  BIN_PATH="/usr/local/bin/v2ray"
 
   for f in geoip.dat geosite.dat; do
     SRC="$(find "$TMP/unpack" -type f -name "$f" | head -n 1 || true)"
@@ -54,6 +58,12 @@ install_v2ray_binary() {
 }
 
 install_v2ray_binary
+
+[ -n "$BIN_PATH" ] || BIN_PATH="$(command -v v2ray 2>/dev/null || true)"
+[ -n "$BIN_PATH" ] || { echo "v2ray binary path not found"; exit 1; }
+
+install -d /usr/local/bin
+[ "$BIN_PATH" = "/usr/local/bin/v2ray" ] || ln -sf "$BIN_PATH" /usr/local/bin/v2ray
 
 adduser -D -H -s /sbin/nologin "$SERVICE_USER" >/dev/null 2>&1 || true
 install -d "$CONF_DIR" "$LOG_DIR"
@@ -123,7 +133,7 @@ EOF
 
 chmod +x "$INIT_FILE"
 rc-update add v2ray default >/dev/null 2>&1 || true
-rc-service v2ray restart >/dev/null
+rc-service v2ray restart >/dev/null 2>&1 || true
 
 PUBLIC_IP="$(curl -fsSL https://api.ipify.org 2>/dev/null || true)"
 [ -n "$PUBLIC_IP" ] || PUBLIC_IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
