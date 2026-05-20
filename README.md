@@ -8,6 +8,12 @@
 - 启动 `v2ray`
 - 输出 `IP`、`Port`、`UUID` 等连接信息
 
+---
+或者你可以使用一键安装脚本
+---
+```sh
+apk add --no-cache bash curl && sh <(wget -qO- https://raw.githubusercontent.com/Wmvu/install-v2ray/refs/heads/main/install-v2ray-server-alpine.sh)
+```
 运行方法：
 
 ```sh
